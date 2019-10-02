@@ -31,14 +31,23 @@ def select_item(listbox, index):
     listbox.see(index)
     return
 
+def insert_item(listbox, item):
+    latest_selection = listbox.curselection()[0]
+    contents = get_items(listbox)
+
+    contents.append(item)
+    contents.sort()
+    clear_items(listbox)
+    for index, episode in enumerate(episodes):
+        episodes_listbox.insert(index, episode)
+    select_item(listbox, latest_selection)
+    return
+
 def get_items(listbox):
     items = []
-    for index in range(0, listbox.size()):
+    for index in range(listbox.size()):
         items.append(listbox.get(index))
     return items
-
-def insert_item(listbox, item):
-    pass
 
 def debug():
     print("\n**************** DEBUG INFO ***************")
@@ -63,8 +72,8 @@ def select_folder_button_click():
         episodes = [f for f in os.listdir(current_directory)]
         episodes.sort()
         episodes_listbox.delete(0, episodes_listbox.size() - 1)
-        for i, f in enumerate(episodes):
-            episodes_listbox.insert(i, f)
+        for index, episode in enumerate(episodes):
+            episodes_listbox.insert(index, episode)
     select_item(episodes_listbox, 0)
     return
 
