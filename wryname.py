@@ -23,6 +23,15 @@ def filter_by_type(items, extensions):
         return results
     return items
 
+def type_checked(item, extensions):
+    filters = [ext for ext, val in extensions.items() if val]
+    if filters:
+        if os.path.splitext(item)[1] in filters:
+            return True
+        else:
+            return False
+    return True
+
 def select_item(listbox, index):
     stop = listbox.size() - 1
     listbox.select_clear(0, stop)
@@ -31,16 +40,20 @@ def select_item(listbox, index):
     listbox.see(index)
     return
 
+def index(listbox, item):
+    contents = get_items(listbox)
+    return contents.index(item)
+
 def insert_item(listbox, item):
-    latest_selection = listbox.curselection()[0]
+    latest_selected_index = listbox.curselection()[0] if listbox.size() else 0
     contents = get_items(listbox)
 
     contents.append(item)
     contents.sort()
-    clear_items(listbox)
-    for index, episode in enumerate(episodes):
+    listbox.delete(0, listbox.size() - 1)
+    for index, episode in enumerate(contents):
         episodes_listbox.insert(index, episode)
-    select_item(listbox, latest_selection)
+    select_item(listbox, latest_selected_index)
     return
 
 def get_items(listbox):
@@ -79,22 +92,23 @@ def select_folder_button_click():
 
 def remove_file_button_click():
     if episodes:
-        index = episodes_listbox.curselection()[0]
-        removed_episodes.append((episodes_listbox.get(index), index))
-        episodes_listbox.delete(index)
-        episodes.remove(episodes[index])
-        episodes_listbox.select_set(index)
+        selected_index = episodes_listbox.curselection()[0]
+        selected_episode = episodes_listbox.get(selected_index)
+
+        episodes_listbox.delete(selected_index)
+        removed_episodes.append(selected_episode)
+        select_item(episodes_listbox, selected_index)
     return
 
 def undo_button_click():
-    episode = ""
-    index = 0
     if removed_episodes:
-        episode, index = removed_episodes[-1]
-        episodes_listbox.insert(index, episode)
-        episodes.insert(index, episode)
-        removed_episodes.remove(removed_episodes[-1])
-        select_item(episodes_listbox, index)
+        last_removed_episode = removed_episodes[-1]
+        if type_checked(last_removed_episode, formats):
+            insert_item(episodes_listbox, last_removed_episode)
+            removed_episodes.remove(last_removed_episode)
+
+            target_index = index(episodes_listbox, last_removed_episode)
+            select_item(episodes_listbox, target_index)
     return
 
 def mkv_checkbox_click():
@@ -119,9 +133,12 @@ def flv_checkbox_click():
 
 def apply_filters_button_click():
     filtered_list = filter_by_type(episodes, formats)
-    if episodes_listbox.size() > 0:
-        index = episodes_listbox.curselection()[0]
-    else: index = 0
+    index = episodes_listbox.curselection()[0] if episodes_listbox.size() else 0
+
+    if removed_episodes:
+        for episode in removed_episodes:
+            if episode in filtered_list:
+                filtered_list.remove(episode)
 
     episodes_listbox.delete(0, episodes_listbox.size() - 1)
 
@@ -133,7 +150,7 @@ def apply_filters_button_click():
 
     select_item(episodes_listbox, index)
     return
-    
+
 def rename_button_click():
     # The main stuffs will happen here.
     pass
