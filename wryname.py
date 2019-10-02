@@ -8,15 +8,12 @@ window_height = 600
 current_directory = ""
 episodes = []
 saved_for_later = []
-removed = []
+removed_episodes = []
 formats = {
     ".mkv" : False, ".mp4" : False,
     ".mov" : False, ".flv" : False}
 
-def choose_directory():
-    return filedialog.askdirectory(title="Select Folder:")
-
-def filter(items, extensions):
+def filter_by_type(items, extensions):
     filters = [ext for ext, val in extensions.items() if val]
     if filters:
         results = []
@@ -26,22 +23,55 @@ def filter(items, extensions):
         return results
     return items
 
+def select_item(listbox, index):
+    stop = listbox.size() - 1
+    listbox.select_clear(0, stop)
+    listbox.select_set(index)
+    listbox.activate(index)
+    listbox.see(index)
+    return
+
+def get_items(listbox):
+    items = []
+    for index in range(0, listbox.size()):
+        items.append(listbox.get(index))
+    return items
+
+def insert_item(listbox, item):
+    pass
+
+def debug():
+    print("\n**************** DEBUG INFO ***************")
+    print("The windows dimensions are ({}, {}).".format(window_width, window_height))
+    print("\nThe current working directory is {}".format(current_directory))
+    print("\nEpisodes to be renamed:")
+    for episode in episodes: print("\t{}".format(episode))
+    print("\nEpisodes saved for manual review:")
+    for episode in saved_for_later: print("\t{}".format(episode))
+    print("\nEpisodes removed from list:")
+    for episode in removed_episodes: print("\t{}".format(episode))
+    print("\nSelected formats:")
+    for f, v in formats.items(): print("\t{} : {}".format(f, v))
+
+#----------------------------------------------------------------
+
 def select_folder_button_click():
     global current_directory
     global episodes
-    current_directory = choose_directory()
+    current_directory = filedialog.askdirectory(title="Select Folder:")
     if not current_directory == "":
         episodes = [f for f in os.listdir(current_directory)]
+        episodes.sort()
         episodes_listbox.delete(0, episodes_listbox.size() - 1)
         for i, f in enumerate(episodes):
-            episodes_listbox.insert(i, f)   
-    episodes_listbox.select_set(0)
+            episodes_listbox.insert(i, f)
+    select_item(episodes_listbox, 0)
     return
 
 def remove_file_button_click():
     if episodes:
         index = episodes_listbox.curselection()[0]
-        removed.append((episodes_listbox.get(index), index))
+        removed_episodes.append((episodes_listbox.get(index), index))
         episodes_listbox.delete(index)
         episodes.remove(episodes[index])
         episodes_listbox.select_set(index)
@@ -50,14 +80,12 @@ def remove_file_button_click():
 def undo_button_click():
     episode = ""
     index = 0
-    if removed:
-        episode, index = removed[-1]
+    if removed_episodes:
+        episode, index = removed_episodes[-1]
         episodes_listbox.insert(index, episode)
         episodes.insert(index, episode)
-        removed.remove(removed[-1])
-        episodes_listbox.select_clear(0, tk.END)
-        episodes_listbox.select_set(index)
-        episodes_listbox.activate(index)
+        removed_episodes.remove(removed_episodes[-1])
+        select_item(episodes_listbox, index)
     return
 
 def mkv_checkbox_click():
@@ -81,7 +109,7 @@ def flv_checkbox_click():
     return
 
 def apply_filters_button_click():
-    filtered_list = filter(episodes, formats)
+    filtered_list = filter_by_type(episodes, formats)
     if episodes_listbox.size() > 0:
         index = episodes_listbox.curselection()[0]
     else: index = 0
@@ -94,26 +122,12 @@ def apply_filters_button_click():
     if index > episodes_listbox.size() - 1:
         index = episodes_listbox.size() - 1
 
-    episodes_listbox.select_clear(0, tk.END)
-    episodes_listbox.select_set(index)
-    episodes_listbox.activate(index)
-    episodes_listbox.see(index)
+    select_item(episodes_listbox, index)
+    return
     
 def rename_button_click():
+    # The main stuffs will happen here.
     pass
-
-def debug():
-    print("\n**************** DEBUG INFO ***************")
-    print("The windows dimensions are ({}, {}).".format(window_width, window_height))
-    print("\nThe current working directory is {}".format(current_directory))
-    print("\nEpisodes to be renamed:")
-    for episode in episodes: print("\t{}".format(episode))
-    print("\nEpisodes saved for manual review:")
-    for episode in saved_for_later: print("\t{}".format(episode))
-    print("\nEpisodes removed from list:")
-    for episode in removed: print("\t{}".format(episode))
-    print("\nSelected formats:")
-    for f, v in formats.items(): print("\t{} : {}".format(f, v))
 
 #----------------------------------------------------------------
 
