@@ -3,25 +3,23 @@ from tkinter import Tk
 import tkinter as tk
 import os
 
+
 window_width = 800
 window_height = 600
 current_directory = ""
-episodes = []
-saved_for_later = []
-removed_episodes = []
+imported_files = []
+removed_files = []
 formats = {
     ".mkv" : False, ".mp4" : False,
     ".mov" : False, ".flv" : False}
 
-def filter_by_type(items, extensions):
-    filters = [ext for ext, val in extensions.items() if val]
+
+def apply_filters(files, extensions):
+    filters = [e for e in extensions if extensions[e]]
     if filters:
-        results = []
-        for item in items:
-            if os.path.splitext(item)[1] in filters:
-                results.append(item)
-        return results
-    return items
+        return [f for f in files if os.path.splitext(f)[1] in filters]
+    return files
+
 
 def type_checked(item, extensions):
     filters = [ext for ext, val in extensions.items() if val]
@@ -32,130 +30,174 @@ def type_checked(item, extensions):
             return False
     return True
 
-def select_item(listbox, index):
-    stop = listbox.size() - 1
-    listbox.select_clear(0, stop)
+
+def contents(listbox):
+    items = []
+    for index in range(listbox.size()):
+        items.append(listbox.get(index))
+    return items
+
+
+def index(listbox, item):
+    files = contents(listbox)
+    try:
+        return files.index(item)
+    except ValueError:
+        return 0
+
+
+def selected_index(listbox):
+    return listbox.curselection()[0] if episodes_listbox.size() else 0
+
+
+def selected_item(listbox):
+    index = selected_index(listbox)
+    return listbox.get(index)
+
+
+def select_index(listbox, index):
+    last = listbox.size() - 1
+    if index > last: index = last
+    listbox.select_clear(0, last)
     listbox.select_set(index)
     listbox.activate(index)
     listbox.see(index)
     return
 
-def index(listbox, item):
-    contents = get_items(listbox)
-    return contents.index(item)
 
-def insert_item(listbox, item):
-    latest_selected_index = listbox.curselection()[0] if listbox.size() else 0
-    contents = get_items(listbox)
-
-    contents.append(item)
-    contents.sort()
-    listbox.delete(0, listbox.size() - 1)
-    for index, episode in enumerate(contents):
-        episodes_listbox.insert(index, episode)
-    select_item(listbox, latest_selected_index)
+def select_item(listbox, item):
+    i = index(listbox, item)
+    listbox.select_clear(0, listbox.size() - 1)
+    listbox.select_set(i)
+    listbox.activate(i)
+    listbox.see(i)
     return
 
-def get_items(listbox):
-    items = []
-    for index in range(listbox.size()):
-        items.append(listbox.get(index))
-    return items
+
+def insert(listbox, item):
+    index = selected_index(listbox)
+    files = contents(listbox)
+    files.append(item)
+    files.sort()
+    clear(listbox)
+    for index, episode in enumerate(files):
+        episodes_listbox.insert(index, episode)
+    select_index(listbox, index)
+    return
+
+
+def populate(listbox, items):
+    index = selected_index(listbox)
+    clear(listbox)
+    for index, episode in enumerate(items):
+        episodes_listbox.insert(index, episode)
+    select_index(listbox, index)
+    return
+
+
+def clear(listbox):
+    listbox.delete(0, listbox.size() - 1)
+    return
+
 
 def debug():
     print("\n**************** DEBUG INFO ***************")
     print("The windows dimensions are ({}, {}).".format(window_width, window_height))
     print("\nThe current working directory is {}".format(current_directory))
     print("\nEpisodes to be renamed:")
-    for episode in episodes: print("\t{}".format(episode))
-    print("\nEpisodes saved for manual review:")
-    for episode in saved_for_later: print("\t{}".format(episode))
+    for episode in imported_files: print("\t{}".format(episode))
+    #print("\nEpisodes saved for manual review:")
+    #for episode in saved_for_later: print("\t{}".format(episode))
     print("\nEpisodes removed from list:")
-    for episode in removed_episodes: print("\t{}".format(episode))
+    for episode in removed_files: print("\t{}".format(episode))
     print("\nSelected formats:")
     for f, v in formats.items(): print("\t{} : {}".format(f, v))
 
+
 #----------------------------------------------------------------
+
 
 def select_folder_button_click():
     global current_directory
-    global episodes
+    global imported_files
     current_directory = filedialog.askdirectory(title="Select Folder:")
     if not current_directory == "":
-        episodes = [f for f in os.listdir(current_directory)]
-        episodes.sort()
-        episodes_listbox.delete(0, episodes_listbox.size() - 1)
-        for index, episode in enumerate(episodes):
-            episodes_listbox.insert(index, episode)
-    select_item(episodes_listbox, 0)
+        imported_files = [f for f in os.listdir(current_directory)]
+        imported_files.sort()
+        populate(episodes_listbox, imported_files)
+    select_index(episodes_listbox, 0)
     return
+
 
 def remove_file_button_click():
-    if episodes:
-        selected_index = episodes_listbox.curselection()[0]
-        selected_episode = episodes_listbox.get(selected_index)
+    if imported_files:
+        index = selected_index(episodes_listbox)
+        selected_episode = selected_item(episodes_listbox)
 
-        episodes_listbox.delete(selected_index)
-        removed_episodes.append(selected_episode)
-        select_item(episodes_listbox, selected_index)
+        episodes_listbox.delete(index)
+        removed_files.append(selected_episode)
+
+        select_index(episodes_listbox, index)
     return
+
 
 def undo_button_click():
-    if removed_episodes:
-        last_removed_episode = removed_episodes[-1]
+    if removed_files:
+        last_removed_episode = removed_files[-1]
         if type_checked(last_removed_episode, formats):
-            insert_item(episodes_listbox, last_removed_episode)
-            removed_episodes.remove(last_removed_episode)
+            insert(episodes_listbox, last_removed_episode)
+            removed_files.remove(last_removed_episode)
 
             target_index = index(episodes_listbox, last_removed_episode)
-            select_item(episodes_listbox, target_index)
+            select_index(episodes_listbox, target_index)
     return
+
 
 def mkv_checkbox_click():
     if formats[".mkv"]: formats[".mkv"] = False
     else: formats[".mkv"] = True
     return
 
+
 def mp4_checkbox_click():
     if formats[".mp4"]: formats[".mp4"] = False
     else: formats[".mp4"] = True
     return
+
 
 def mov_checkbox_click():
     if formats[".mov"]: formats[".mov"] = False
     else: formats[".mov"] = True
     return
 
+
 def flv_checkbox_click():
     if formats[".flv"]: formats[".flv"] = False
     else: formats[".flv"] = True
     return
 
-def apply_filters_button_click():
-    filtered_list = filter_by_type(episodes, formats)
-    index = episodes_listbox.curselection()[0] if episodes_listbox.size() else 0
 
-    if removed_episodes:
-        for episode in removed_episodes:
+def apply_filters_button_click():
+    latest_selection = selected_item(episodes_listbox)
+    filtered_list = apply_filters(imported_files, formats)
+
+    if removed_files:
+        for episode in removed_files:
             if episode in filtered_list:
                 filtered_list.remove(episode)
 
-    episodes_listbox.delete(0, episodes_listbox.size() - 1)
-
-    for i, f in enumerate(filtered_list):
-        episodes_listbox.insert(i, f)
-
-    if index > episodes_listbox.size() - 1:
-        index = episodes_listbox.size() - 1
-
-    select_item(episodes_listbox, index)
+    populate(episodes_listbox, filtered_list)
+    select_item(episodes_listbox, latest_selection)
     return
+
 
 def rename_button_click():
     # The main stuffs will happen here.
     pass
 
+
 #----------------------------------------------------------------
+
 
 # ROOT
 root = Tk()
