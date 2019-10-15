@@ -4,16 +4,6 @@ import tkinter as tk
 import os
 
 
-window_width = 800
-window_height = 600
-current_directory = ""
-removed_files = []
-formats = {
-    ".mkv" : False, ".mp4" : False,
-    ".mov" : False, ".flv" : False}
-padding_selection = tk.IntVar
-
-
 def imported_files():
     files = [f for f in os.listdir(current_directory)]
     return sorted(files)
@@ -201,26 +191,37 @@ def rename_button_click():
 
 
 # ROOT
+window_width = 800
+window_height = 600
+background_color = "light grey"
 root = Tk()
-root.title("AniRename")
+root.title("WRYName")
 canvas = tk.Canvas(root, width=window_width, height=window_height)
 canvas.pack()
+current_directory = ""
+removed_files = []
+formats = {
+    ".mkv" : False, ".mp4" : False,
+    ".mov" : False, ".flv" : False}
+padding_selection = tk.IntVar(value=0)
 
 # FRAMES
 menu_frame = tk.Frame(root, bg="light blue")
 menu_frame.place(relwidth=1, relheight=.2)
-body_frame = tk.Frame(root, bg="light grey")
+body_frame = tk.Frame(root, bg=background_color)
 body_frame.place(rely=.2, relwidth=1, relheight=.8)
 
 # LABELS
-episodes_label = tk.Label(body_frame, bg="light grey", text="Episodes to rename:")
+episodes_label = tk.Label(body_frame, bg=background_color, text="Episodes to rename:")
 episodes_label.place(relx=.20, rely=0, relwidth=.3, relheight=.1)
-saved_for_review_label = tk.Label(body_frame, bg="light grey", text="Saved for manual review:")
+saved_for_review_label = tk.Label(body_frame, bg=background_color, text="Saved for manual review:")
 saved_for_review_label.place(relx=.20, rely=.6, relwidth=.3, relheight=.1)
-formats_label = tk.Label(body_frame, bg="light grey", text="Filter by format:")
+formats_label = tk.Label(body_frame, bg=background_color, text="Filter by format:")
 formats_label.place(relx=.7, rely=0, relwidth=.3, relheight=.1)
-padding_label = tk.Label(body_frame, bg="light grey", text="Zero padding:")
+padding_label = tk.Label(body_frame, bg=background_color, text="Zero padding:")
 padding_label.place(relx=.7, rely=.4, relwidth=.3, relheight=.1)
+series_title_label = tk.Label(body_frame, bg=background_color, text="Series title:")
+series_title_label.place(relx=.7, rely=.7, relwidth=.3, relheight=.1)
 
 
 # BUTTONS
@@ -238,25 +239,29 @@ apply_filters_button = tk.Button(body_frame, text="Apply", command=apply_filters
 apply_filters_button.place(relx=.775, rely=.3, relwidth=.15, relheight=.05)
 
 # CHECKBOXES
-mkv_checkbox = tk.Checkbutton(body_frame, bg="light grey", text=".mkv", command=mkv_checkbox_click)
+mkv_checkbox = tk.Checkbutton(body_frame, bg=background_color, text=".mkv", command=mkv_checkbox_click)
 mkv_checkbox.place(relx=.7, rely=.1, relwidth=.15, relheight=.05)
-mp4_checkbox = tk.Checkbutton(body_frame, bg="light grey", text=".mp4", command=mp4_checkbox_click)
+mp4_checkbox = tk.Checkbutton(body_frame, bg=background_color, text=".mp4", command=mp4_checkbox_click)
 mp4_checkbox.place(relx=.7, rely=.2, relwidth=.15, relheight=.05)
-mov_checkbox = tk.Checkbutton(body_frame, bg="light grey", text=".mov", command=mov_checkbox_click)
+mov_checkbox = tk.Checkbutton(body_frame, bg=background_color, text=".mov", command=mov_checkbox_click)
 mov_checkbox.place(relx=.85, rely=.1, relwidth=.15, relheight=.05)
-flv_checkbox = tk.Checkbutton(body_frame, bg="light grey", text=".flv", command=flv_checkbox_click)
+flv_checkbox = tk.Checkbutton(body_frame, bg=background_color, text=".flv", command=flv_checkbox_click)
 flv_checkbox.place(relx=.85, rely=.2, relwidth=.15, relheight=.05)
 
-# RADIOBUTTONS
-one_digit_radiobutton = tk.Radiobutton(body_frame, bg="light grey", var=padding_selection, value=1, text="No padding")
-one_digit_radiobutton.place(relx=.7, rely=.5, relwidth=.15, relheight=.05)
-two_digits_radiobutton = tk.Radiobutton(body_frame, bg="light grey", var=padding_selection, value=2, text="Two digits")
-two_digits_radiobutton.place(relx=.85, rely=.5, relwidth=.15, relheight=.05)
-three_digits_radiobutton = tk.Radiobutton(body_frame, bg="light grey", var=padding_selection, value=3, text="Three digits")
-three_digits_radiobutton.place(relx=.70, rely=.6, relwidth=.15, relheight=.05)
-four_digits_radiobutton = tk.Radiobutton(body_frame, bg="light grey", var=padding_selection, value=4, text="Four digits")
-four_digits_radiobutton.place(relx=.85, rely=.6, relwidth=.15, relheight=.05)
+# TEXTBOXES
+series_title_textbox = tk.Text(body_frame, height=1)
+series_title_textbox.place(relx=.72, rely=.8, relwidth=.25)
+series_title_textbox.insert(tk.INSERT, "Enter a new title here...")
 
+# RADIOBUTTONS
+one_digit_radiobutton = tk.Radiobutton(body_frame, bg=background_color, var=padding_selection, value=0, text="No padding")
+one_digit_radiobutton.place(relx=.7, rely=.5, relwidth=.15, relheight=.05)
+two_digits_radiobutton = tk.Radiobutton(body_frame, bg=background_color, var=padding_selection, value=2, text="Two digits")
+two_digits_radiobutton.place(relx=.85, rely=.5, relwidth=.15, relheight=.05)
+three_digits_radiobutton = tk.Radiobutton(body_frame, bg=background_color, var=padding_selection, value=3, text="Three digits")
+three_digits_radiobutton.place(relx=.70, rely=.6, relwidth=.15, relheight=.05)
+four_digits_radiobutton = tk.Radiobutton(body_frame, bg=background_color, var=padding_selection, value=4, text="Four digits")
+four_digits_radiobutton.place(relx=.85, rely=.6, relwidth=.15, relheight=.05)
 
 # LISTBOXES
 episodes_listbox = tk.Listbox(body_frame, relief=tk.GROOVE)
