@@ -5,8 +5,10 @@ import os
 
 
 def imported_files():
-    files = [f for f in os.listdir(current_directory)]
-    return sorted(files)
+    if not current_directory == "":
+        files = [f for f in os.listdir(current_directory)]
+        return sorted(files)
+    return []
 
 
 def apply_filters(files, extensions):
