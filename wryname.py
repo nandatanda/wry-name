@@ -44,7 +44,10 @@ def index(listbox, item):
 
 
 def selected_index(listbox):
-    return listbox.curselection()[0] if episodes_listbox.size() else 0
+    try:
+        return listbox.curselection()[0]
+    except IndexError:
+        return 0
 
 
 def selected_item(listbox):
@@ -96,10 +99,18 @@ def clear(listbox):
     listbox.delete(0, listbox.size() - 1)
     return
 
+
 def clear_text(entry):
     entry.delete('0', tk.END)
     return
 
+
+def search(files, number, padding):
+    return [
+        f
+        for f in files
+        if str(number).zfill(padding) in f
+    ]
 
 
 def debug():
@@ -188,6 +199,7 @@ def apply_filters_button_click():
     select_item(episodes_listbox, latest_selection)
     return
 
+
 def series_title_changed(series_title):
     fill = padding_selection.get()
     title = series_title.get()
@@ -196,6 +208,7 @@ def series_title_changed(series_title):
         preview_label.config(text=new_name)
     else:
         preview_label.config(text="(^~^;)/")
+
 
 def padding_selection_changed(padding_selection):
     fill = padding_selection.get()
@@ -206,9 +219,39 @@ def padding_selection_changed(padding_selection):
     else:
         preview_label.config(text="(^~^;)/")
 
+
 def rename_button_click():
-    # The main stuffs will happen here.
-    pass
+    if contents(episodes_listbox):
+        files = [os.path.join(current_directory, filename) for filename in contents(episodes_listbox)]
+        target_directory = current_directory
+        padding = padding_selection.get()
+        file_number = 0
+        unmatched = 0
+        title = series_title.get()
+
+        while files:
+            file_number +=1
+            results = search(files, file_number, padding)
+            if results:
+                    if len(results) > 1:
+                        unmatched += 1
+                        print("Multiple matches found. Skipping this pass...")
+                    else:
+                        match = results[0]
+                        ext = os.path.splitext(match)[1]
+                        num = str(file_number).zfill(padding)
+                        new = os.path.join(target_directory, "{} - {}{}".format(title, num, ext))
+                        os.rename(match, new)
+                        files.remove(match)
+                        file_number = 0
+                        unmatched = 0
+                        print("Renamed file '{}' to '{}'.".format(match, new))
+            else:
+                print("No matches found.")
+            print()
+            if len(files) == unmatched:
+                print("NEED USER INPUT!\n")
+                break
 
 
 #----------------------------------------------------------------
