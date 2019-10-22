@@ -1,5 +1,6 @@
 from tkinter import filedialog
 from tkinter import Tk
+from time import sleep
 import tkinter as tk
 import os
 
@@ -83,6 +84,12 @@ def insert(listbox, item):
     for index, episode in enumerate(files):
         episodes_listbox.insert(index, episode)
     select_index(listbox, index)
+    return
+
+def remove_item(listbox, item):
+    items = contents(listbox)
+    items.remove(item)
+    populate(listbox, items)
     return
 
 
@@ -243,15 +250,18 @@ def rename_button_click():
                         new = os.path.join(target_directory, "{} - {}{}".format(title, num, ext))
                         os.rename(match, new)
                         files.remove(match)
+                        remove_item(episodes_listbox, os.path.basename(match))
                         file_number = 0
                         unmatched = 0
                         print("Renamed file '{}' to '{}'.".format(match, new))
             else:
-                print("No matches found.")
+                print("No matches found for episode {}.".format(file_number))
             print()
-            if len(files) == unmatched:
+            if files and len(files) == unmatched:
                 print("NEED USER INPUT!\n")
                 break
+            elif len(files) == 0:
+                print("FILES SUCCESSFULLY RENAMED!\n")
 
 
 #----------------------------------------------------------------
