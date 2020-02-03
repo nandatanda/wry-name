@@ -2,6 +2,7 @@ from tkinter import filedialog
 from tkinter import Tk
 from time import sleep
 import tkinter as tk
+import controls
 import os
 
 
@@ -284,7 +285,7 @@ padding_selection = tk.IntVar(value=2)
 series_title = tk.StringVar(value="")
 
 # FRAMES
-menu_frame = tk.Frame(root, bg="light blue")
+menu_frame = controls.Frame(root, width=1, height=.2, background="light blue")
 menu_frame.place(relwidth=1, relheight=.2)
 body_frame = tk.Frame(root, bg=background_color)
 body_frame.place(rely=.2, relwidth=1, relheight=.8)
